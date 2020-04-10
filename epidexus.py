@@ -158,15 +158,15 @@ class Person(Agent):
 
     def advance(self):
         """The agent moves in the advance function"""
-        loc = self.itenary.get_location(self.model.current_date)
-        # If there is no place to go, go home.
-        if loc is None:
-            if self.current_location is not self.home_location:
+        scheduled_location = self.itenary.get_location(self.model.current_date)
+        if scheduled_location is None: # If there is no place to go; go home.
+            self.__change_location(self.home_location)
+        else:
+            self.__change_location(scheduled_location)
+
+    def __change_location(self, new_location):
+        """Changes location of the agent"""
+        if new_location is not self.current_location:
+            if new_location.go_here():
                 self.current_location.leave_here()
-                self.current_location = self.home_location
-        # If the itenary location is new. Check if we are allowed to go there
-        # and change location.
-        elif loc is not self.current_location:
-            if loc.go_here():
-                self.current_location.leave_here()
-                self.current_location = loc
+                self.current_location = new_location
