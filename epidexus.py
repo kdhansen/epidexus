@@ -12,6 +12,7 @@ class EpidexusModel(Model):
 
     def step(self):
         self.current_date += self.sim_time_step
+        print(str(self.current_date))
         self.schedule.step()
 
     def add_person(self, person: Agent):
@@ -52,18 +53,6 @@ class Location:
         self.persons_here.remove(person)
 
 
-class NormalDistribution:
-    def __init__(self, mean, std_deviation):
-        self.mean = mean
-        self.std_deviation = std_deviation
-
-
-class StaysHours(NormalDistribution):
-    """Defines how long people usually stay at a location"""
-
-    def __init__(self, mean, std_deviation):
-        super().__init__(mean, std_deviation)
-
 
 class ItenaryEntry:
     """Entry to insert into an Itenary
@@ -71,15 +60,28 @@ class ItenaryEntry:
     The entry tells when the person should go to a Location and for how
     long to stay. It also has a rescheduling function to continously
     keep the persons itenary filled.
+
+    Arguments:
+    location -- the Location the person is sent to
+    go_when -- the time the person should go
+    for_how_long -- the amount of time the person should stay
+    rescheduling_func -- a function taking the current time when the
+                         person leaves returning a tuple of go_when and
+                         for_how_long for the next time.
     """
     def __init__(self, location: Location, go_when: datetime, for_how_long: timedelta, reschedule_func):
         self.location = location
         self.go_when = go_when
         self.go_until = go_when + for_how_long
-        self.reschedule_func = reschedule_func
+        self.__reschedule_func = reschedule_func
 
     def __lt__(self, other):
         return self.go_when < other.go_when
+
+    def reschedule(self, current_time: datetime):
+        t, dt = self.__reschedule_func(current_time)
+        return ItenaryEntry(self.location, t, dt, self.__reschedule_func)
+
 
 
 class Itenary:
@@ -97,15 +99,16 @@ class Itenary:
             if self.the_itenary[0].go_when > at_time:
                 return None
             # If it is time and it's not yet time to go home, go to location.
-            if self.the_itenary[0].go_when < at_time < self.the_itenary[0].go_until:
+            if self.the_itenary[0].go_when <= at_time < self.the_itenary[0].go_until:
                 return self.the_itenary[0].location
             # Time is up, delete the item and add a rescheduled one, check the itenary again.
-            if self.the_itenary[0].go_until < at_time:
-                new_entry = self.the_itenary[0].reschedule_func()
+            if self.the_itenary[0].go_until <= at_time:
+                new_entry = self.the_itenary[0].reschedule(at_time)
                 del self.the_itenary[0]
                 self.add_entry(new_entry)
         # If there is no items, go home
         return None
+
 
 
 class Person(Agent):
@@ -118,7 +121,7 @@ class Person(Agent):
         # SEIR(D)
         self.susceptible = True
         self.exposed = False
-        self.incubation_ends = datetime()
+        self.incubation_ends = None
         self.infected = False
         self.recovered = False
         self.deceased = False
@@ -167,6 +170,7 @@ class Person(Agent):
     def __change_location(self, new_location):
         """Changes location of the agent"""
         if new_location is not self.current_location:
-            if new_location.go_here():
-                self.current_location.leave_here()
+            if new_location.go_here(self):
+                print("Agent-" + str(self.unique_id) + "@" + self.current_location.name + "Going to " + new_location.name)
+                self.current_location.leave_here(self)
                 self.current_location = new_location
