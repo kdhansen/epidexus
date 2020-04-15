@@ -5,6 +5,7 @@ from enum import Enum
 from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
+import numpy.random
 import logging
 
 
@@ -76,11 +77,12 @@ class Location:
     in this simulation.
     """
 
-    def __init__(self, name=""):
+    def __init__(self, name="", infection_probability=0.0):
         # Initially, everybody is allowed in.
         self.access_policy = lambda person: True
         self.name = name
         self.persons_here = []
+        self.infection_probability = infection_probability
 
     def set_access_policy(self, policy) -> None:
         """Sets the access policy of this location.
@@ -268,10 +270,9 @@ class Person(Agent):
         """Infections are evaluated in the step function."""
         if self.infection_state.is_suceptible():
             for p in self.current_location.persons_here:
-                if p.infection_state.is_infected():
-                    # TODO: add probability here
+                if (p.infection_state.is_infected()
+                        and numpy.random.uniform() < self.current_location.infection_probability):
                     self.infect()
-                    print(str(self.unique_id) + " got exposed.")
 
         self.infection_state.update(self.model.current_date)
 
@@ -288,7 +289,5 @@ class Person(Agent):
         """Changes location of the agent."""
         if new_location is not self.current_location:
             if new_location.go_here(self):
-                print("Agent-" + str(self.unique_id) + "@" +
-                      self.current_location.name + " going to " + new_location.name)
                 self.current_location.leave_here(self)
                 self.current_location = new_location
