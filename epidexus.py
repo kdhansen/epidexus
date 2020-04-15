@@ -1,8 +1,10 @@
 from bisect import insort
+from copy import copy
 from datetime import datetime, timedelta
 from enum import Enum
 from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
+from mesa.datacollection import DataCollector
 import logging
 
 
@@ -16,6 +18,12 @@ class EpidexusModel(Model):
         self.current_date = start_date
         self.sim_time_step = sim_time_step
 
+        self.datacollector = DataCollector(model_reporters={"S": self.report_s,
+                                                            "E": self.report_e,
+                                                            "I": self.report_i,
+                                                            "R": self.report_r})
+        self.seir_counts = [0, 0, 0, 0]
+
         logging.basicConfig(filename='debug.log',level=logging.DEBUG)
         logging.info("-- Started Epidexus Simulation --")
         logging.info("Current date: " + str(self.current_date))
@@ -23,13 +31,42 @@ class EpidexusModel(Model):
         logging.info("---------------------------------")
 
     def step(self):
+        last_date = copy(self.current_date)
         self.current_date = self.current_date + self.sim_time_step
-        print(str(self.current_date))
+
+        # Report SEIR only once a day
+        if self.current_date.date() > last_date.date():
+            self.count_seir()
+            self.datacollector.collect(self)
+
         self.schedule.step()
 
     def add_person(self, person: Agent):
         self.schedule.add(person)
         logging.debug("Added person: " + str(person))
+
+    def count_seir(self):
+        """Count the agents in each bin.
+
+        Run this function before the report_x functions to update
+        the counts. This is to avoid iterating over all agent for
+        each of the four reporters.
+        """
+        self.seir_counts = [0, 0, 0, 0]
+        for a in self.schedule.agents:
+            self.seir_counts[a.infection_state.seir.value] += 1
+
+    def report_s(self, model):
+        return self.seir_counts[0]
+
+    def report_e(self, model):
+        return self.seir_counts[1]
+
+    def report_i(self, model):
+        return self.seir_counts[2]
+
+    def report_r(self, model):
+        return self.seir_counts[3]
 
 
 class Location:
@@ -142,10 +179,10 @@ class SEIR(Enum):
     """Enumeration of the standard parameters for
     susceptible, exposed, infected and recovered.
     """
-    SUSCEPTIBLE = 1
-    EXPOSED = 2
-    INFECTED = 3
-    RECOVERED = 4
+    SUSCEPTIBLE = 0
+    EXPOSED = 1
+    INFECTED = 2
+    RECOVERED = 3
 
 
 class InfectionState:
