@@ -181,7 +181,7 @@ class Gender(Enum):
     FEMALE = 2
 
     def __str__(self):
-        return self.name.capitalize()
+        return self.name.capitalize() # pylint: disable=no-member
 
 
 class Person(Agent):
