@@ -7,6 +7,10 @@ import logging
 
 
 class EpidexusModel(Model):
+    """The main simulation model.
+
+    This is the entry point for MESA-based simulations.
+    """
     def __init__(self, start_date: datetime, sim_time_step=timedelta(minutes=15)):
         self.schedule = SimultaneousActivation(self)
         self.current_date = start_date
@@ -29,7 +33,7 @@ class EpidexusModel(Model):
 
 
 class Location:
-    """Represents a physical location persons can go to
+    """Represents a physical location persons can go to.
 
     Together with Person, this is one of the main classes
     in this simulation.
@@ -68,7 +72,7 @@ class Location:
 
 
 class ItineraryEntry:
-    """Entry to insert into an Itinerary
+    """Entry to insert into an Itinerary.
 
     The entry tells when the person should go to a Location and for how
     long to stay. It also has a rescheduling function to continously
@@ -82,7 +86,6 @@ class ItineraryEntry:
                          person leaves returning a tuple of go_when and
                          for_how_long for the next time.
     """
-
     def __init__(self, location: Location, go_when: datetime, for_how_long: timedelta, reschedule_func):
         self.location = location
         self.go_when = go_when
@@ -104,9 +107,21 @@ class Itinerary:
         self.the_itinerary = []
 
     def add_entry(self, new_entry: ItineraryEntry):
+        """Add a new entry on the itinerary.
+
+        The entry is sorting-inserted into the itinerary according
+        to the start time of the entries, so that the next relevant
+        entry is always first in the list.
+        """
         insort(self.the_itinerary, new_entry)
 
     def get_location(self, at_time: datetime):
+        """Get the next location on the itinerary.
+
+        If there is no active next location in the itinerary,
+        the function returns None, meaning that the Person should
+        go to their default location (probably home).
+        """
         while len(self.the_itinerary) > 0:
             # If there is an item but it is not time yet, go home.
             if self.the_itinerary[0].go_when > at_time:
@@ -125,7 +140,7 @@ class Itinerary:
 
 class SEIR(Enum):
     """Enumeration of the standard parameters for
-    susceptible, exposed, infected, recovered
+    susceptible, exposed, infected and recovered.
     """
     SUSCEPTIBLE = 1
     EXPOSED = 2
@@ -134,7 +149,7 @@ class SEIR(Enum):
 
 
 class InfectionState:
-    """Tracks and updates the infection of a person"""
+    """Tracks and updates the infection of a person."""
 
     def __init__(self, seir=SEIR.SUSCEPTIBLE, incubation_time=timedelta(days=4),
                  recovering_time=timedelta(days=10)):
@@ -185,7 +200,7 @@ class Gender(Enum):
 
 
 class Person(Agent):
-    """The main character in this simulation"""
+    """The main character in this simulation."""
 
     def __init__(self, unique_id: int, model: EpidexusModel,
                  home_location: Location, seir=SEIR.SUSCEPTIBLE,
@@ -213,7 +228,7 @@ class Person(Agent):
         self.infection_state.infect(self.model.current_date)
 
     def step(self):
-        """Infections are evaluated in the step function"""
+        """Infections are evaluated in the step function."""
         if self.infection_state.is_suceptible():
             for p in self.current_location.persons_here:
                 if p.infection_state.is_infected():
@@ -224,7 +239,7 @@ class Person(Agent):
         self.infection_state.update(self.model.current_date)
 
     def advance(self):
-        """The agent moves in the advance function"""
+        """The agent moves in the advance function."""
         scheduled_location = self.itinerary.get_location(
             self.model.current_date)
         if scheduled_location is None:  # If there is no place to go; go home.
@@ -233,7 +248,7 @@ class Person(Agent):
             self.__change_location(scheduled_location)
 
     def __change_location(self, new_location):
-        """Changes location of the agent"""
+        """Changes location of the agent."""
         if new_location is not self.current_location:
             if new_location.go_here(self):
                 print("Agent-" + str(self.unique_id) + "@" +
