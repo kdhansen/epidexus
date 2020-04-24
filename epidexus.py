@@ -1,5 +1,6 @@
 # Epidexus - Agent Based Location-Graph Epidemic Simulation
-# Copyright (C) 2020  Karl D. Hansen <kdh@es.aau.dk>
+#
+# Copyright (C) 2020  Karl D. Hansen, Aalborg University <kdh@es.aau.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,6 +32,7 @@ class EpidexusModel(Model):
     This is the entry point for MESA-based simulations.
     """
     def __init__(self, start_date: datetime, sim_time_step=timedelta(minutes=15)):
+        super().__init__()
         self.schedule = SimultaneousActivation(self)
         self.current_date = start_date
         self.sim_time_step = sim_time_step
@@ -113,7 +115,7 @@ class Location:
         """Registers an agent at this location.
 
         If this function returns False, the agent is
-        not allowed to come in and must relocalize
+        not allowed to come in and must relocate
         itself.
         """
         is_person_allowed = self.access_policy(person)
@@ -130,29 +132,29 @@ class ItineraryEntry:
     """Entry to insert into an Itinerary.
 
     The entry tells when the person should go to a Location and for how
-    long to stay. It also has a rescheduling function to continously
+    long to stay. It also has a rescheduling function to continuously
     keep the persons itinerary filled.
 
     Arguments:
     location -- the Location the person is sent to
-    go_when -- the time the person should go
-    for_how_long -- the amount of time the person should stay
-    rescheduling_func -- a function taking the current time when the
-                         person leaves returning a tuple of go_when and
-                         for_how_long for the next time.
+    go_when -- the time the person should go to the location
+    leave_when -- the amount of time the person should stay
     """
-    def __init__(self, location: Location, go_when: datetime, for_how_long: timedelta, reschedule_func):
+    def __init__(self, location: Location, go_when: datetime, leave_when: datetime):
         self.location = location
         self.go_when = go_when
-        self.go_until = go_when + for_how_long
-        self.__reschedule_func = reschedule_func
+        self.leave_when = leave_when
 
     def __lt__(self, other):
         return self.go_when < other.go_when
 
     def reschedule(self, current_time: datetime):
-        t, dt = self.__reschedule_func(current_time)
-        return ItineraryEntry(self.location, t, dt, self.__reschedule_func)
+        """Reschedules a new appointment on the itinerary
+
+        This base class returns None, meaning it is not a recurring
+        event. Subclasses can return a new ItineraryEntry.
+        """
+        return None
 
 
 class Itinerary:
@@ -182,10 +184,10 @@ class Itinerary:
             if self.the_itinerary[0].go_when > at_time:
                 return None
             # If it is time and it's not yet time to go home, go to location.
-            if self.the_itinerary[0].go_when <= at_time < self.the_itinerary[0].go_until:
+            if self.the_itinerary[0].go_when <= at_time < self.the_itinerary[0].leave_when:
                 return self.the_itinerary[0].location
             # Time is up, delete the item and add a rescheduled one, check the itinerary again.
-            if self.the_itinerary[0].go_until <= at_time:
+            if self.the_itinerary[0].leave_when <= at_time:
                 new_entry = self.the_itinerary[0].reschedule(at_time)
                 del self.the_itinerary[0]
                 self.add_entry(new_entry)
