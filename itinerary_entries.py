@@ -17,6 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from copy import copy
+from typing import Tuple
 from datetime import date, datetime, time, timedelta
 from epidexus import Location, ItineraryEntry
 
@@ -32,7 +33,15 @@ class FixedWeekItineraryEntry (ItineraryEntry):
     Caution: The class does not check if the start date is in the past.
     It will happily place an itinerary entry in the past.
     """
-    def __init__(self, location: Location, start_date: date, monday=None, tuesday=None, wednesday=None, thursday=None, friday=None, saturday=None, sunday=None):
+
+    def __init__(self, location: Location, start_date: date,
+                 monday: Tuple[time, time] = None,
+                 tuesday: Tuple[time, time] = None,
+                 wednesday: Tuple[time, time] = None,
+                 thursday: Tuple[time, time] = None,
+                 friday: Tuple[time, time] = None,
+                 saturday: Tuple[time, time] = None,
+                 sunday: Tuple[time, time] = None):
         self._week_schedule = [monday, tuesday,
                                wednesday, thursday, friday, saturday, sunday]
         # Check if any hours were given
@@ -53,16 +62,17 @@ class FixedWeekItineraryEntry (ItineraryEntry):
         from_date -- date to start the search from
         """
         for d in range(7):
-            if self._week_schedule[(from_date.weekday()+d)%7] is not None:
+            if self._week_schedule[(from_date.weekday()+d) % 7] is not None:
                 return from_date + timedelta(days=d)
 
     def reschedule(self, current_time: datetime):
         new_entry = copy(self)
         next_day = self.__next_valid_date(current_time.date())
-        #If the next day is the current day and the come hours has passed,
-        #then we will search on from tomorrow.
+        # If the next day is the current day and the come hours has passed,
+        # then we will search on from tomorrow.
         if datetime.combine(next_day, self._week_schedule[next_day.weekday()][0]) < current_time:
-            next_day = self.__next_valid_date(current_time.date() + timedelta(days=1))
+            next_day = self.__next_valid_date(
+                current_time.date() + timedelta(days=1))
 
         hours = self._week_schedule[next_day.weekday()]
         new_entry.go_when = datetime.combine(next_day, hours[0])
