@@ -33,6 +33,16 @@ pip install -r requirements.txt
 This model works best with the current GitHub version of Mesa, as it is stated in the requirements.txt. The PyPI version is missing several features:
 `pip install -e git+https://github.com/projectmesa/mesa#egg=mesa`
 
+### conda environment
+Instead of the venv approach, you could use a conda environment. This also takes care of installing the required packages. A `conda_env.yml`-file is provided for this.
+```
+conda env create --file conda_env.yml -p venv
+```
+This creates a local conda environment in a folder called `venv` (but now it is a conda environment). You activate it by:
+```
+conda activate ./venv
+```
+
 ## Model Description
 The model is intended to simulate the effect of closing and opening locations such as schools, shops, bars, etc. The agents of the system, the persons, move between locations according to their own itinerary, effectively creating a bipartite graph of person-nodes and location-nodes. In each location, the persons can become infected if another infectious person is present. The transmission probability depends on the location.
 
