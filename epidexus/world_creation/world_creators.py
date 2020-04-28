@@ -31,20 +31,16 @@ def create_family(sim_model: EpidexusModel, num_people: int):
 
     In addition the home location is also returned.
 
-    The home is named after the first person's unique id.
     """
     if num_people < 1:
         raise ValueError(
             "Number of people in a family should be greater than 1.")
 
     people = []
-    primary_id = sim_model.next_id()
-    home_loc = Location("Home-" + str(primary_id), infection_probability=0.05)
-    primary_person = Person(primary_id, sim_model, home_loc)
-    sim_model.add_person(primary_person)
-    people.append(primary_person)
-    for i in range(num_people-1):  # pylint: disable=unused-variable
-        p = Person(sim_model.next_id(), sim_model, home_loc)
+    home_loc = Location(sim_model, "Home", infection_probability=0.05)
+    sim_model.add_location(home_loc)
+    for i in range(num_people):  # pylint: disable=unused-variable
+        p = Person(sim_model, home_loc)
         sim_model.add_person(p)
         people.append(p)
     return people, home_loc
@@ -63,25 +59,23 @@ def create_family_prob(sim_model: EpidexusModel,
     location is also returned.
 
     TODO: The age distribution probably should be a gamma or other non-negative distribution.
-
-    The home is named after the first person's unique id.
     """
     people = []
-    primary_id = sim_model.next_id()
-    home_loc = Location("Home-" + str(primary_id), infection_probability=0.1)
+    home_loc = Location(sim_model, "Home", infection_probability=0.1)
+    sim_model.add_location(home_loc)
     #Generate adults (at least one)
     num_adults = round(normal(num_adult_mean, num_adult_sd))
     age = round(normal(age_adult_mean, age_adult_sd))
     if age < 0:
         age = 0
-    primary_person = Person(primary_id, sim_model, home_loc, age=age)
+    primary_person = Person(sim_model, home_loc, age=age)
     sim_model.add_person(primary_person)
     people.append(primary_person)
     for i in range(num_adults-1):  # pylint: disable=unused-variable
         age = round(normal(age_adult_mean, age_adult_sd))
         if age < 0:
             age = 0
-        p = Person(sim_model.next_id(), sim_model, home_loc, age=age)
+        p = Person(sim_model, home_loc, age=age)
         sim_model.add_person(p)
         people.append(p)
     #Generate kids
@@ -90,7 +84,7 @@ def create_family_prob(sim_model: EpidexusModel,
         age = round(normal(age_children_mean, age_children_sd))
         if age < 0:
             age = 0
-        p = Person(sim_model.next_id(), sim_model, home_loc, age=age)
+        p = Person(sim_model, home_loc, age=age)
         sim_model.add_person(p)
         people.append(p)
 

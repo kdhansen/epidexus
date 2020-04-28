@@ -39,6 +39,8 @@ class EpidexusModel(Model):
                                                             "I": self.report_i,
                                                             "R": self.report_r})
         self.seir_counts = [0, 0, 0, 0]
+        self.persons = []
+        self.locations =[]
 
         logging.basicConfig(filename='debug.log',level=logging.DEBUG)
         logging.info("-- Started Epidexus Simulation --")
@@ -59,7 +61,13 @@ class EpidexusModel(Model):
 
     def add_person(self, person: Agent):
         self.schedule.add(person)
+        self.persons.append(person)
         logging.debug("Added person: " + str(person))
+
+    def add_location(self, location: Agent):
+        self.schedule.add(location)
+        self.locations.append(location)
+        logging.debug("Added location: " + str(location))
 
     def count_seir(self):
         """Count the agents in each bin.
@@ -69,7 +77,7 @@ class EpidexusModel(Model):
         each of the four reporters.
         """
         self.seir_counts = [0, 0, 0, 0]
-        for a in self.schedule.agents:
+        for a in self.persons:
             self.seir_counts[a.infection_state.seir.value] += 1
 
     def report_s(self, model):

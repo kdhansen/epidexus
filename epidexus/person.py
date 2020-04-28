@@ -37,10 +37,10 @@ class Gender(Enum):
 class Person(Agent):
     """The main character in this simulation."""
 
-    def __init__(self, unique_id: int, model: EpidexusModel,
+    def __init__(self, model: EpidexusModel,
                  home_location: Location, seir=SEIR.SUSCEPTIBLE,
                  age=0, gender=Gender.UNKNOWN):
-        super().__init__(unique_id, model)
+        super().__init__(model.next_id(), model)
 
         self.age = age
         self.gender = gender
@@ -62,18 +62,10 @@ class Person(Agent):
     def infect(self):
         self.infection_state.infect(self.model.current_date)
 
-    def step(self):
-        """Infections are evaluated in the step function."""
-        if self.infection_state.is_suceptible():
-            for p in self.current_location.persons_here:
-                if (p.infection_state.is_infected()
-                        and numpy.random.uniform() < self.current_location.infection_probability):
-                    self.infect()
-
-        self.infection_state.update(self.model.current_date)
-
     def advance(self):
         """The agent moves in the advance function."""
+        self.infection_state.update(self.model.current_date) # Internal inf. state is updated before moving.
+
         scheduled_location = self.itinerary.get_location(
             self.model.current_date)
         if scheduled_location is None:  # If there is no place to go; go home.
