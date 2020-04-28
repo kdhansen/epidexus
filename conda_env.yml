@@ -1,0 +1,11 @@
+name:
+channels:
+  - defaults
+dependencies:
+  - jupyter
+  - matplotlib
+  - pip
+  - pip:
+    - "git+https://github.com/projectmesa/mesa#egg=mesa"
+
+
