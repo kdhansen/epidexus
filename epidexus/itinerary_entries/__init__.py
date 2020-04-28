@@ -1,0 +1,1 @@
+from ._fixed_week_itinerary_entry import FixedWeekItineraryEntry
