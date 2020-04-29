@@ -21,23 +21,35 @@ from epidexus import EpidexusModel, Location, Person, ItineraryEntry
 from numpy.random import normal
 
 
-def create_family(sim_model: EpidexusModel, num_people: int):
+def create_family(sim_model: EpidexusModel, num_people: int,
+                  home_infection_prob=0.1):
     """Creates a home and people living in it.
 
-    Creates the [num_people] number of family members with a common home
-    location. The people are added to the simulation model scheduler. A list of
-    people are also returned, e.g. to be used in subsequent claiming from
-    schools and workplaces.
+    Creates the [num_people] number of family members with
+    a common home location. The people are added to the
+    simulation model scheduler. A list of people are also
+    returned, e.g. to be used in subsequent claiming from
+    schools and workplaces. In addition the home location
+    is also returned.
 
-    In addition the home location is also returned.
+    Arguments:
+        sim_model: The simulation model.
+        num_people: The number of people that is generated.
+        home_infection_prob: The infection probability at
+                             home (defaults to 10%, which may
+                             be totally wrong, depending on
+                             use-case.)
 
+    Returns:
+        (people, home_location)
     """
     if num_people < 1:
         raise ValueError(
             "Number of people in a family should be greater than 1.")
 
     people = []
-    home_loc = Location(sim_model, "Home", infection_probability=0.05)
+    home_loc = Location(sim_model, "Home",
+                        infection_probability=home_infection_prob)
     sim_model.add_location(home_loc)
     for i in range(num_people):  # pylint: disable=unused-variable
         p = Person(sim_model, home_loc)
@@ -59,6 +71,8 @@ def create_family_prob(sim_model: EpidexusModel,
     location is also returned.
 
     TODO: The age distribution probably should be a gamma or other non-negative distribution.
+
+    Returns: (people, home_location)
     """
     people = []
     home_loc = Location(sim_model, "Home", infection_probability=0.1)
@@ -94,7 +108,8 @@ def create_family_prob(sim_model: EpidexusModel,
 def claim_by_age(people: List[Person], it_entry: ItineraryEntry, min_age: int, max_age: int, max_num=1):
     """Location makes a claim on a number of people by age.
 
-    Returns -- A list with the claimed persons removed"""
+    Returns -- A list with the claimed persons removed
+    """
     count = 0
     unclaimed = []
     for p in people:
