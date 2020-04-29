@@ -82,6 +82,7 @@ class Itinerary:
             if self.the_itinerary[0].leave_when <= at_time:
                 new_entry = self.the_itinerary[0].reschedule(at_time)
                 del self.the_itinerary[0]
-                self.add_entry(new_entry)
+                if new_entry is not None:
+                    self.add_entry(new_entry)
         # If there is no items, go home
         return None
