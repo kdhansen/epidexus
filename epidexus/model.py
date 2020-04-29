@@ -21,6 +21,7 @@ from mesa import Agent, Model
 from mesa.time import SimultaneousActivation
 from mesa.datacollection import DataCollector
 import logging
+from typing import List
 
 
 class EpidexusModel(Model):
@@ -68,6 +69,10 @@ class EpidexusModel(Model):
         self.schedule.add(location)
         self.locations.append(location)
         logging.debug("Added location: " + str(location))
+
+    def add_locations(self, locations: List[Agent]):
+        for l in locations:
+            self.add_location(l)
 
     def count_seir(self):
         """Count the agents in each bin.
