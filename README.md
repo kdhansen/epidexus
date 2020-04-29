@@ -50,4 +50,4 @@ The persons can be in four different infection categories: Susceptible, Exposed,
 
 
 ## Instructions for Use
-Try the Jupyter Notebook `corona_sim.ipynb`
+Try the Jupyter Notebook `tutorial.ipynb`
