@@ -49,7 +49,7 @@ def create_family(sim_model: EpidexusModel, num_people: int,
 
     people = []
     home_loc = Location(sim_model, "Home",
-                        infection_probability=home_infection_prob)
+                        infection_rate=home_infection_prob)
     sim_model.add_location(home_loc)
     for i in range(num_people):  # pylint: disable=unused-variable
         p = Person(sim_model, home_loc)
