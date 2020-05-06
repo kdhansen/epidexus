@@ -51,11 +51,11 @@ class Location(Agent):
 
     @property
     def infection_rate(self):
-        return self._beta_per_s * 3600
+        return self._beta_per_s * 86400
 
     @infection_rate.setter
     def infection_rate(self, value):
-        self._beta_per_s = value/3600
+        self._beta_per_s = value/86400
 
     def __str__(self):
         return ("Location id: {}, name: {}".format(self.unique_id, self.name))

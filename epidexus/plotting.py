@@ -14,4 +14,4 @@ def infected_plot(sim_model: EpidexusModel, ax=None):
     seir = sim_model.datacollector.get_model_vars_dataframe()
     if ax is None:
         ax = plt.subplot(1,1,1)
-    ax.stackplot(seir.axes[0], seir["I"])
+    ax.stackplot(seir.axes[0], seir["I"], colors=['#ff7f0e'])
