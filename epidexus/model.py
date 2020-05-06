@@ -35,7 +35,8 @@ class EpidexusModel(Model):
         self.current_date = start_date
         self.sim_time_step = sim_time_step
 
-        self.datacollector = DataCollector(model_reporters={"S": self.report_s,
+        self.datacollector = DataCollector(model_reporters={"Date": self.report_current_date,
+                                                            "S": self.report_s,
                                                             "E": self.report_e,
                                                             "I": self.report_i,
                                                             "R": self.report_r})
@@ -96,3 +97,6 @@ class EpidexusModel(Model):
 
     def report_r(self, model):
         return self.seir_counts[3]
+
+    def report_current_date(self, model):
+        return self.current_date
