@@ -2,3 +2,5 @@ venv/
 .vscode/
 __pycache__
 debug.log
+epidexus.egg-info
+.ipynb_checkpoints
